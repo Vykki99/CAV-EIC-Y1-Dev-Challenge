@@ -29,6 +29,31 @@ namespace {
         memory.home = home;
         memory.knownFood.assign(terrain.size(), std::vector<bool>(terrain[0].size(), false));
     }
+
+    /** @brief Updates knownFood from every live ant's foodScan. Empty cells in radius
+     * are cleared so a pickup another ant made is forgotten once someone sees it.
+     */
+    void observe(std::vector<Ant> &ants, MapTemplate &foodMap) {
+        for (Ant &ant : ants) {
+            const std::vector<Coord> visible = ant.foodScan(foodMap);
+            const int radius = ant.foodRadius;
+            const int rows = static_cast<int>(memory.knownFood.size());
+            const int cols = static_cast<int>(memory.knownFood[0].size());
+
+            for (int i = ant.position.first - radius; i <= ant.position.first + radius; ++i) {
+                for (int j = ant.position.second - radius; j <= ant.position.second + radius; ++j) {
+                    if (i < 0 || i >= rows || j < 0 || j >= cols) {
+                        continue;
+                    }
+                    memory.knownFood[i][j] = false;
+                }
+            }
+
+            for (const Coord &cell : visible) {
+                memory.knownFood[cell.first][cell.second] = true;
+            }
+        }
+    }
 }
 
 /** @brief Runs one tick of the colony. */
@@ -36,6 +61,8 @@ void AntWorld::forage() {
     if (!isKnownWorld(this->terrainMap, this->homeCoordinates)) {
         resetMemory(this->terrainMap, this->homeCoordinates);
     }
+
+    observe(this->ants, this->foodMap);
 }
 
 /** You may insert any custom functions below **/
