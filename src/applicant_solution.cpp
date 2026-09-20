@@ -12,6 +12,7 @@ namespace {
         MapTemplate terrain;
         Coord home = Coord(-1, -1);
         std::vector<std::vector<bool> > knownFood;
+        int seekMisses = 0;
     };
 
     ColonyMemory memory;
@@ -28,6 +29,7 @@ namespace {
         memory.terrain = terrain;
         memory.home = home;
         memory.knownFood.assign(terrain.size(), std::vector<bool>(terrain[0].size(), false));
+        memory.seekMisses = 0;
     }
 
     /** @brief Updates knownFood from every live ant's foodScan. Empty cells in radius
@@ -94,10 +96,16 @@ void AntWorld::forage() {
 
         const Coord food = nearestKnownFood(ant.position);
         if (food.first < 0) {
+            ++memory.seekMisses;
             continue;
         }
         ant.move(this->terrainMap, food, this->foodMap);
     }
+}
+
+/** @brief Ant-ticks this world where a non-carrying ant had no known food to chase. */
+int colonySeekMisses() {
+    return memory.seekMisses;
 }
 
 /** You may insert any custom functions below **/
