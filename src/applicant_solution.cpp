@@ -4,22 +4,38 @@
 
 #include "../include/antworld.h"
 
+namespace {
+    /** @brief Map knowledge shared by the whole colony. Ants hold no state of their own,
+     * because dead ants are erased from AntWorld::ants and shift every index after them.
+     */
+    struct ColonyMemory {
+        MapTemplate terrain;
+        Coord home = Coord(-1, -1);
+        std::vector<std::vector<bool> > knownFood;
+    };
 
-/** @brief this is where you as the applicant will make use of the above functions to develop your solution.
- * here are some existing examples of how calling these functions works to help get you started!
- */
+    ColonyMemory memory;
+
+    /** @brief Terrain and home are fixed for a world's lifetime, so they identify it.
+     * Comparing the AntWorld pointer would not, since a new world can reuse a freed address.
+     */
+    bool isKnownWorld(const MapTemplate &terrain, const Coord home) {
+        return memory.home == home && memory.terrain == terrain;
+    }
+
+    /** @brief Wipes memory and resizes the colony map to fit a new world. */
+    void resetMemory(const MapTemplate &terrain, const Coord home) {
+        memory.terrain = terrain;
+        memory.home = home;
+        memory.knownFood.assign(terrain.size(), std::vector<bool>(terrain[0].size(), false));
+    }
+}
+
+/** @brief Runs one tick of the colony. */
 void AntWorld::forage() {
-    // std::vector<Coord> visibleFood = this->ants[0].foodScan(this->foodMap);
-    //
-    // Coord desiredDestination = Coord(5, 5);
-    // Coord finalPos = this->ants[0].move(this->terrainMap, desiredDestination, this->foodMap);
-    // bool destCheck = (desiredDestination == finalPos);
-    //
-    // this->ants[0].dropPheromone(this->pheromoneMap);
-    //
-    // this->ants[0].erasePheromone(this->pheromoneMap);
-    //
-    // this->ants[0].returnHome(this->terrainMap, this->foodMap);
+    if (!isKnownWorld(this->terrainMap, this->homeCoordinates)) {
+        resetMemory(this->terrainMap, this->homeCoordinates);
+    }
 }
 
 /** You may insert any custom functions below **/
