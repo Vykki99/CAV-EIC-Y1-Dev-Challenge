@@ -62,6 +62,37 @@ Building it in small steps so I can measure each one instead of guessing.
 
 ## Baseline
 
-Unmodified project builds clean with GCC 16.1 and CMake 4.3 (Ninja). All 40 framework
-checks in `antworld_tests` pass. With the empty `forage()`, `dev_challenge` runs the full
-1000 steps and scores nothing, which is the number to beat.
+Unmodified project builds clean with GCC 16.1 and CMake 4.3. All 40 framework checks in
+`antworld_tests` pass. With the empty `forage()`, `dev_challenge` runs the full 1000 steps
+and scores nothing.
+
+`dev_challenge` is a poor measuring stick for anything after that. The constructor prints
+each ant's starting energy, and if the 1000-step cap is hit it never prints the score at
+all. `tools/benchmark.cpp` runs many seeds, swallows those energy prints, and always
+reports `game.score`. Command is `benchmark [seeds] [mapX] [mapY] [ants]`, defaults
+20 / 15 / 15 / 8. Seeds are 1000, 1001, ... so the number is not overfit to 12345.
+
+### Naive colony (nearest known food, whole-path `move()`)
+
+20 seeds, 15x15, 8 ants:
+
+```
+score mean=32.6 min=24 max=41
+stranded=120 backtracks=1 seek_misses mean=0
+```
+
+Default seed 12345 scored 33, used all 1000 steps, and still had one ant alive. That is
+why the graded binary said "Game not finished" and showed no score.
+
+**Stranded 120** is about 6 of 8 ants dying in the field every world. They walk all the
+way to food with no energy reserved for the trip home. This is the number the energy
+guard has to drive to 0.
+
+**Backtracks 1** in 20 games: almost no vibration, which is expected while `move()` still
+walks an entire path each tick. The counter ignores ants that are carrying food, so
+"go out, then walk home" is not counted as oscillation.
+
+**Seek misses 0:** `knownFood` never goes empty. At 40% food density the colony always
+has some remembered cell, including ones that are already picked clean but not yet
+re-scanned. So a zero here does *not* mean exploration is useless. The M6 gate (whether
+to build a frontier) should wait until targets are real round trips, not leftover flags.
