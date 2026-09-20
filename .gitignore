@@ -1,0 +1,8 @@
+# CMake build output
+build/
+cmake-build-*/
+
+# IDE / editor
+.idea/
+.vs/
+.vscode/
