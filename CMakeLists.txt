@@ -51,3 +51,19 @@ if (BUILD_TESTING)
             COMMAND antworld_tests
     )
 endif ()
+
+add_executable(benchmark
+        tools/benchmark.cpp
+        src/applicant_solution.cpp
+        ${FRAMEWORK_SOURCES}
+)
+
+target_include_directories(benchmark PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if (MSVC)
+    target_compile_options(benchmark PRIVATE /W4)
+else ()
+    target_compile_options(benchmark PRIVATE -Wall -Wextra -Wpedantic)
+endif ()
