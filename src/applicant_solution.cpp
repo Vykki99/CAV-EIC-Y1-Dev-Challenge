@@ -54,6 +54,28 @@ namespace {
             }
         }
     }
+
+    /** @brief Closest known food by Manhattan distance. Returns {-1,-1} if none. */
+    Coord nearestKnownFood(const Coord from) {
+        Coord best(-1, -1);
+        int bestDist = std::numeric_limits<int>::max();
+        const int rows = static_cast<int>(memory.knownFood.size());
+        const int cols = static_cast<int>(memory.knownFood[0].size());
+
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                if (!memory.knownFood[i][j]) {
+                    continue;
+                }
+                const int dist = std::abs(from.first - i) + std::abs(from.second - j);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = Coord(i, j);
+                }
+            }
+        }
+        return best;
+    }
 }
 
 /** @brief Runs one tick of the colony. */
@@ -63,6 +85,19 @@ void AntWorld::forage() {
     }
 
     observe(this->ants, this->foodMap);
+
+    for (Ant &ant : this->ants) {
+        if (ant.carryingFood) {
+            ant.returnHome(this->terrainMap, this->foodMap);
+            continue;
+        }
+
+        const Coord food = nearestKnownFood(ant.position);
+        if (food.first < 0) {
+            continue;
+        }
+        ant.move(this->terrainMap, food, this->foodMap);
+    }
 }
 
 /** You may insert any custom functions below **/
