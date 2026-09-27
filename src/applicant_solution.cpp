@@ -78,6 +78,18 @@ namespace {
         }
         return best;
     }
+
+    /** @brief Walks one cell of the shortest path toward dest. Already there is a no-op. */
+    void stepToward(Ant &ant, const Coord dest, MapTemplate &terrain, MapTemplate &food) {
+        if (ant.position == dest) {
+            return;
+        }
+        const std::vector<Coord> path = shortestPath(terrain, ant.position, dest);
+        if (path.size() < 2) {
+            return;
+        }
+        ant.move(terrain, path[1], food);
+    }
 }
 
 /** @brief Runs one tick of the colony. */
@@ -90,7 +102,7 @@ void AntWorld::forage() {
 
     for (Ant &ant : this->ants) {
         if (ant.carryingFood) {
-            ant.returnHome(this->terrainMap, this->foodMap);
+            stepToward(ant, ant.homeCoord, this->terrainMap, this->foodMap);
             continue;
         }
 
@@ -99,7 +111,7 @@ void AntWorld::forage() {
             ++memory.seekMisses;
             continue;
         }
-        ant.move(this->terrainMap, food, this->foodMap);
+        stepToward(ant, food, this->terrainMap, this->foodMap);
     }
 }
 
