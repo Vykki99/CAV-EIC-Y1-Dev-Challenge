@@ -3,6 +3,7 @@
 //
 
 #include "../include/antworld.h"
+#include "../include/colony.h"
 
 namespace {
     /** @brief Map knowledge shared by the whole colony. Ants hold no state of their own,
@@ -12,6 +13,7 @@ namespace {
         MapTemplate terrain;
         Coord home = Coord(-1, -1);
         std::vector<std::vector<bool> > knownFood;
+        MapTemplate costToHome;
         int seekMisses = 0;
     };
 
@@ -29,6 +31,7 @@ namespace {
         memory.terrain = terrain;
         memory.home = home;
         memory.knownFood.assign(terrain.size(), std::vector<bool>(terrain[0].size(), false));
+        memory.costToHome = computeCostField(terrain, home);
         memory.seekMisses = 0;
     }
 
@@ -128,3 +131,45 @@ int colonySeekMisses() {
 }
 
 /** You may insert any custom functions below **/
+
+MapTemplate computeCostField(const MapTemplate &grid, const Coord start) {
+    const int rows = static_cast<int>(grid.size());
+    const int cols = static_cast<int>(grid[0].size());
+    const int unreached = std::numeric_limits<int>::max();
+
+    MapTemplate dist(rows, std::vector<int>(cols, unreached));
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> open;
+    dist[start.first][start.second] = 0;
+    open.push({0, start});
+
+    const int dr[4] = {-1, 1, 0, 0};
+    const int dc[4] = {0, 0, -1, 1};
+
+    while (!open.empty()) {
+        const Node current = open.top();
+        open.pop();
+        const int cost = current.cost;
+        const int r = current.pos.first;
+        const int c = current.pos.second;
+        if (cost != dist[r][c]) {
+            continue;
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            const int nr = r + dr[i];
+            const int nc = c + dc[i];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) {
+                continue;
+            }
+
+            const int step = 1 + std::abs(grid[r][c] - grid[nr][nc]);
+            const int next = cost + step;
+            if (next < dist[nr][nc]) {
+                dist[nr][nc] = next;
+                open.push({next, {nr, nc}});
+            }
+        }
+    }
+
+    return dist;
+}
