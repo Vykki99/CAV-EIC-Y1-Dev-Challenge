@@ -115,6 +115,10 @@ void AntWorld::forage() {
             continue;
         }
         stepToward(ant, food, this->terrainMap, this->foodMap);
+        // This tick's observe() already ran, so forget the pickup for ants still to move.
+        if (ant.carryingFood) {
+            memory.knownFood[ant.position.first][ant.position.second] = false;
+        }
     }
 }
 
