@@ -79,9 +79,12 @@ namespace {
         return best;
     }
 
-    /** @brief Walks one cell of the shortest path toward dest. Already there is a no-op. */
+    /** @brief Walks one cell toward dest. If already there, move() still runs so food
+     * under the ant is collected at zero cost.
+     */
     void stepToward(Ant &ant, const Coord dest, MapTemplate &terrain, MapTemplate &food) {
         if (ant.position == dest) {
+            ant.move(terrain, dest, food);
             return;
         }
         const std::vector<Coord> path = shortestPath(terrain, ant.position, dest);
