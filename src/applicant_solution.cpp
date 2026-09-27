@@ -60,10 +60,14 @@ namespace {
         }
     }
 
-    /** @brief Closest known food by Manhattan distance. Returns {-1,-1} if none. */
-    Coord nearestKnownFood(const Coord from) {
+    /** @brief Cheapest known food this ant can reach and still walk home.
+     * Returns {-1,-1} when nothing is affordable.
+     */
+    Coord chooseAffordableFood(const Ant &ant) {
+        const MapTemplate fromAnt = computeCostField(memory.terrain, ant.position);
+        const int unreached = std::numeric_limits<int>::max();
         Coord best(-1, -1);
-        int bestDist = std::numeric_limits<int>::max();
+        int bestRound = unreached;
         const int rows = static_cast<int>(memory.knownFood.size());
         const int cols = static_cast<int>(memory.knownFood[0].size());
 
@@ -72,9 +76,17 @@ namespace {
                 if (!memory.knownFood[i][j]) {
                     continue;
                 }
-                const int dist = std::abs(from.first - i) + std::abs(from.second - j);
-                if (dist < bestDist) {
-                    bestDist = dist;
+                const int outCost = fromAnt[i][j];
+                const int homeCost = memory.costToHome[i][j];
+                if (outCost == unreached || homeCost == unreached) {
+                    continue;
+                }
+                if (outCost > ant.energy || homeCost > ant.energy - outCost) {
+                    continue;
+                }
+                const int round = outCost + homeCost;
+                if (round < bestRound) {
+                    bestRound = round;
                     best = Coord(i, j);
                 }
             }
@@ -112,7 +124,7 @@ void AntWorld::forage() {
             continue;
         }
 
-        const Coord food = nearestKnownFood(ant.position);
+        const Coord food = chooseAffordableFood(ant);
         if (food.first < 0) {
             ++memory.seekMisses;
             continue;
@@ -125,7 +137,7 @@ void AntWorld::forage() {
     }
 }
 
-/** @brief Ant-ticks this world where a non-carrying ant had no known food to chase. */
+/** @brief Ant-ticks where a non-carrying ant had no affordable known food. */
 int colonySeekMisses() {
     return memory.seekMisses;
 }
