@@ -85,8 +85,7 @@ Default seed 12345 scored 33, used all 1000 steps, and still had one ant alive. 
 why the graded binary said "Game not finished" and showed no score.
 
 **Stranded 120** is about 6 of 8 ants dying in the field every world. They walk all the
-way to food with no energy reserved for the trip home. This is the number the energy
-guard has to drive to 0.
+way to food with no energy reserved for the trip home.
 
 **Backtracks 1** in 20 games: almost no vibration, which is expected while `move()` still
 walks an entire path each tick. The counter ignores ants that are carrying food, so
@@ -94,8 +93,8 @@ walks an entire path each tick. The counter ignores ants that are carrying food,
 
 **Seek misses 0:** `knownFood` never goes empty. At 40% food density the colony always
 has some remembered cell, including ones that are already picked clean but not yet
-re-scanned. So a zero here does *not* mean exploration is useless. The M6 gate (whether
-to build a frontier) should wait until targets are real round trips, not leftover flags.
+re-scanned. A zero here means the memory never went empty, including cells that are
+already picked clean.
 
 ### M3 — one cell per tick
 
@@ -111,3 +110,17 @@ forget food on pickup    mean=33.8  min=26 max=42  stranded=113  backtracks=201
 The dip to 23.35 was a freeze, not a bad walk. If an ant is standing on food, that cell is distance 0, so it is always the nearest target. `stepToward` used to return without calling `move()`, and `move()` is the only thing that picks food up. On worlds where home itself had food, every ant stayed there forever (`min=0`). Calling `move()` on the ant's own cell collects it and spends no energy. The mean went back to 33.5.
 
 Clearing `knownFood` when an ant picks up only helps ants later in the same tick. Mean 33.8. Stranded deaths are still about 6 of 8 ants per world. Backtracks rose because ants now retarget every step instead of committing to a whole path.
+
+### M4 — round trips only
+
+Same 20 seeds.
+
+```
+end of M3                 mean=33.8  min=26 max=42  stranded=113  backtracks=201  seek_misses mean=0
+affordable food only      mean=33.2  min=24 max=42  stranded=0    backtracks=231  seek_misses mean=7105.2
+step guard and walk home  mean=33.2  min=24 max=42  stranded=0    backtracks=248  seek_misses mean=7105.2
+```
+
+An ant now takes a food cell only when its energy covers the walk there and the walk home. Stranded deaths went to 0 on that change. The mean dipped by 0.6 because the old colony sometimes delivered one more item by spending its last energy and dying. Those unfinished hauls were not a reliable extra point.
+
+The step guard and the walk-home fallback did not move the score. The food choice already refused unsafe trips, so the guard never had to block a step. Seek misses near 7100 are the idle tail: once nothing affordable is left, every ant has no target for most of the 1000 ticks. Backtracks rose slightly because some ants step back onto a cell they just left while turning toward home.
