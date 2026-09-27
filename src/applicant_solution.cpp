@@ -94,10 +94,15 @@ namespace {
         return best;
     }
 
-    /** @brief Walks one cell toward dest. If already there, move() still runs so food
-     * under the ant is collected at zero cost.
+    /** @brief Walks one cell toward dest, but only if the ant can still reach home
+     * from the cell it would land on. Standing on dest still calls move() so food
+     * there is collected at zero cost.
      */
     void stepToward(Ant &ant, const Coord dest, MapTemplate &terrain, MapTemplate &food) {
+        const int homeHere = memory.costToHome[ant.position.first][ant.position.second];
+        if (homeHere > ant.energy) {
+            return;
+        }
         if (ant.position == dest) {
             ant.move(terrain, dest, food);
             return;
@@ -106,7 +111,14 @@ namespace {
         if (path.size() < 2) {
             return;
         }
-        ant.move(terrain, path[1], food);
+        const Coord next = path[1];
+        const int step = 1 + std::abs(terrain[ant.position.first][ant.position.second] -
+                                       terrain[next.first][next.second]);
+        const int homeAfter = memory.costToHome[next.first][next.second];
+        if (step > ant.energy || homeAfter > ant.energy - step) {
+            return;
+        }
+        ant.move(terrain, next, food);
     }
 }
 
@@ -127,6 +139,12 @@ void AntWorld::forage() {
         const Coord food = chooseAffordableFood(ant);
         if (food.first < 0) {
             ++memory.seekMisses;
+            if (ant.position != ant.homeCoord) {
+                stepToward(ant, ant.homeCoord, this->terrainMap, this->foodMap);
+                if (ant.carryingFood) {
+                    memory.knownFood[ant.position.first][ant.position.second] = false;
+                }
+            }
             continue;
         }
         stepToward(ant, food, this->terrainMap, this->foodMap);
