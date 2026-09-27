@@ -72,7 +72,7 @@ all. `tools/benchmark.cpp` runs many seeds, swallows those energy prints, and al
 reports `game.score`. Command is `benchmark [seeds] [mapX] [mapY] [ants]`, defaults
 20 / 15 / 15 / 8. Seeds are 1000, 1001, ... so the number is not overfit to 12345.
 
-### Naive colony (nearest known food, whole-path `move()`)
+### M1 — nearest known food, whole-path `move()`
 
 20 seeds, 15x15, 8 ants:
 
@@ -96,3 +96,18 @@ walks an entire path each tick. The counter ignores ants that are carrying food,
 has some remembered cell, including ones that are already picked clean but not yet
 re-scanned. So a zero here does *not* mean exploration is useless. The M6 gate (whether
 to build a frontier) should wait until targets are real round trips, not leftover flags.
+
+### M3 — one cell per tick
+
+Same 20 seeds. Each row is the colony after that commit, not a separate strategy.
+
+```
+whole path (M1)          mean=32.6  min=24 max=41  stranded=120  backtracks=1
+one cell, no self-pickup mean=23.35 min=0  max=42  stranded=78   backtracks=127
+standing-on-food pickup  mean=33.5  min=24 max=42  stranded=122  backtracks=193
+forget food on pickup    mean=33.8  min=26 max=42  stranded=113  backtracks=201
+```
+
+The dip to 23.35 was a freeze, not a bad walk. If an ant is standing on food, that cell is distance 0, so it is always the nearest target. `stepToward` used to return without calling `move()`, and `move()` is the only thing that picks food up. On worlds where home itself had food, every ant stayed there forever (`min=0`). Calling `move()` on the ant's own cell collects it and spends no energy. The mean went back to 33.5.
+
+Clearing `knownFood` when an ant picks up only helps ants later in the same tick. Mean 33.8. Stranded deaths are still about 6 of 8 ants per world. Backtracks rose because ants now retarget every step instead of committing to a whole path.

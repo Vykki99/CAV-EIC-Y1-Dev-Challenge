@@ -78,6 +78,21 @@ namespace {
         }
         return best;
     }
+
+    /** @brief Walks one cell toward dest. If already there, move() still runs so food
+     * under the ant is collected at zero cost.
+     */
+    void stepToward(Ant &ant, const Coord dest, MapTemplate &terrain, MapTemplate &food) {
+        if (ant.position == dest) {
+            ant.move(terrain, dest, food);
+            return;
+        }
+        const std::vector<Coord> path = shortestPath(terrain, ant.position, dest);
+        if (path.size() < 2) {
+            return;
+        }
+        ant.move(terrain, path[1], food);
+    }
 }
 
 /** @brief Runs one tick of the colony. */
@@ -90,7 +105,7 @@ void AntWorld::forage() {
 
     for (Ant &ant : this->ants) {
         if (ant.carryingFood) {
-            ant.returnHome(this->terrainMap, this->foodMap);
+            stepToward(ant, ant.homeCoord, this->terrainMap, this->foodMap);
             continue;
         }
 
@@ -99,7 +114,11 @@ void AntWorld::forage() {
             ++memory.seekMisses;
             continue;
         }
-        ant.move(this->terrainMap, food, this->foodMap);
+        stepToward(ant, food, this->terrainMap, this->foodMap);
+        // This tick's observe() already ran, so forget the pickup for ants still to move.
+        if (ant.carryingFood) {
+            memory.knownFood[ant.position.first][ant.position.second] = false;
+        }
     }
 }
 
