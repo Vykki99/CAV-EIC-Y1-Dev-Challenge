@@ -12,4 +12,14 @@ MapTemplate computeCostField(const MapTemplate &grid, Coord start);
 /** @brief Same cost as computeCostField. markers is accepted and not read. */
 MapTemplate computeTravelCost(const MapTemplate &terrain, const MapTemplate &markers, Coord start);
 
+/** @brief Cheapest affordable food cell. Returns {-1,-1} when none qualifies.
+ * claimed cells are skipped. Ties keep the earlier row, then the earlier column.
+ */
+Coord chooseTarget(
+    const std::vector<std::vector<bool>> &knownFood,
+    const MapTemplate &fromAnt,
+    const MapTemplate &costToHome,
+    int energy,
+    const std::vector<Coord> &claimed);
+
 #endif

@@ -60,38 +60,10 @@ namespace {
         }
     }
 
-    /** @brief Cheapest known food this ant can reach and still walk home.
-     * Returns {-1,-1} when nothing is affordable.
-     */
+    /** @brief Cheapest known food this ant can reach and still walk home. */
     Coord chooseAffordableFood(const Ant &ant) {
         const MapTemplate fromAnt = computeCostField(memory.terrain, ant.position);
-        const int unreached = std::numeric_limits<int>::max();
-        Coord best(-1, -1);
-        int bestRound = unreached;
-        const int rows = static_cast<int>(memory.knownFood.size());
-        const int cols = static_cast<int>(memory.knownFood[0].size());
-
-        for (int i = 0; i < rows; ++i) {
-            for (int j = 0; j < cols; ++j) {
-                if (!memory.knownFood[i][j]) {
-                    continue;
-                }
-                const int outCost = fromAnt[i][j];
-                const int homeCost = memory.costToHome[i][j];
-                if (outCost == unreached || homeCost == unreached) {
-                    continue;
-                }
-                if (outCost > ant.energy || homeCost > ant.energy - outCost) {
-                    continue;
-                }
-                const int round = outCost + homeCost;
-                if (round < bestRound) {
-                    bestRound = round;
-                    best = Coord(i, j);
-                }
-            }
-        }
-        return best;
+        return chooseTarget(memory.knownFood, fromAnt, memory.costToHome, ant.energy, {});
     }
 
     /** @brief Walks one cell toward dest, but only if the ant can still reach home
@@ -207,4 +179,49 @@ MapTemplate computeCostField(const MapTemplate &grid, const Coord start) {
 MapTemplate computeTravelCost(const MapTemplate &terrain, const MapTemplate &markers, const Coord start) {
     (void)markers;
     return computeCostField(terrain, start);
+}
+
+Coord chooseTarget(
+    const std::vector<std::vector<bool>> &knownFood,
+    const MapTemplate &fromAnt,
+    const MapTemplate &costToHome,
+    const int energy,
+    const std::vector<Coord> &claimed) {
+    const int unreached = std::numeric_limits<int>::max();
+    Coord best(-1, -1);
+    int bestRound = unreached;
+    const int rows = static_cast<int>(knownFood.size());
+    const int cols = rows > 0 ? static_cast<int>(knownFood[0].size()) : 0;
+
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (!knownFood[i][j]) {
+                continue;
+            }
+            bool taken = false;
+            for (const Coord &cell : claimed) {
+                if (cell.first == i && cell.second == j) {
+                    taken = true;
+                    break;
+                }
+            }
+            if (taken) {
+                continue;
+            }
+            const int outCost = fromAnt[i][j];
+            const int homeCost = costToHome[i][j];
+            if (outCost == unreached || homeCost == unreached) {
+                continue;
+            }
+            if (outCost > energy || homeCost > energy - outCost) {
+                continue;
+            }
+            const int round = outCost + homeCost;
+            if (round < bestRound) {
+                bestRound = round;
+                best = Coord(i, j);
+            }
+        }
+    }
+    return best;
 }
