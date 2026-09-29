@@ -27,11 +27,11 @@ namespace {
     }
 
     /** @brief Wipes memory and resizes the colony map to fit a new world. */
-    void resetMemory(const MapTemplate &terrain, const Coord home) {
+    void resetMemory(const MapTemplate &terrain, const MapTemplate &markers, const Coord home) {
         memory.terrain = terrain;
         memory.home = home;
         memory.knownFood.assign(terrain.size(), std::vector<bool>(terrain[0].size(), false));
-        memory.costToHome = computeCostField(terrain, home);
+        memory.costToHome = computeTravelCost(terrain, markers, home);
         memory.seekMisses = 0;
     }
 
@@ -125,7 +125,7 @@ namespace {
 /** @brief Runs one tick of the colony. */
 void AntWorld::forage() {
     if (!isKnownWorld(this->terrainMap, this->homeCoordinates)) {
-        resetMemory(this->terrainMap, this->homeCoordinates);
+        resetMemory(this->terrainMap, this->pheromoneMap, this->homeCoordinates);
     }
 
     observe(this->ants, this->foodMap);
@@ -202,4 +202,9 @@ MapTemplate computeCostField(const MapTemplate &grid, const Coord start) {
     }
 
     return dist;
+}
+
+MapTemplate computeTravelCost(const MapTemplate &terrain, const MapTemplate &markers, const Coord start) {
+    (void)markers;
+    return computeCostField(terrain, start);
 }

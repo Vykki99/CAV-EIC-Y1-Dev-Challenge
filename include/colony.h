@@ -9,4 +9,7 @@
 /** @brief Energy cost from start to every cell. Unreached cells stay at INT_MAX. */
 MapTemplate computeCostField(const MapTemplate &grid, Coord start);
 
+/** @brief Same cost as computeCostField. markers is accepted and not read. */
+MapTemplate computeTravelCost(const MapTemplate &terrain, const MapTemplate &markers, Coord start);
+
 #endif

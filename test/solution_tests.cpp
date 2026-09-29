@@ -62,12 +62,24 @@ namespace {
         check(field[0][0] == 4, "opposite corner counts each flat step");
         check(everyCellReached(field), "a solid rectangle has no unreached cell");
     }
+
+    void testMarkersDoNotChangeCost() {
+        const MapTemplate terrain{{0, 1, 0}, {0, 0, 0}};
+        const MapTemplate empty(2, std::vector<int>(3, 0));
+        MapTemplate saturated(2, std::vector<int>(3, 1));
+        saturated[0][1] = 9;
+        const Coord home{1, 2};
+
+        check(computeTravelCost(terrain, empty, home) == computeTravelCost(terrain, saturated, home),
+              "a full marker layer does not change travel cost");
+    }
 }
 
 int main() {
     testFlatCosts();
     testElevationCosts();
     testRectangle();
+    testMarkersDoNotChangeCost();
 
     if (failures == 0) {
         std::cout << "All " << checks << " checks passed.\n";
