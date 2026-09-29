@@ -73,6 +73,24 @@ namespace {
         check(computeTravelCost(terrain, empty, home) == computeTravelCost(terrain, saturated, home),
               "a full marker layer does not change travel cost");
     }
+
+    void testChooseTarget() {
+        const std::vector<std::vector<bool>> food{
+            {false, true, true},
+            {true, false, false},
+        };
+        const MapTemplate fromAnt{{0, 1, 3}, {2, 0, 0}};
+        const MapTemplate costHome{{0, 3, 1}, {2, 0, 0}};
+
+        check(chooseTarget(food, fromAnt, costHome, 3, {}) == Coord(-1, -1),
+              "chooseTarget rejects a round trip the ant cannot afford");
+        check(chooseTarget(food, fromAnt, costHome, 4, {}) == Coord(0, 1),
+              "equal round trips keep the earlier row and column");
+        check(chooseTarget(food, fromAnt, costHome, 4, {Coord(0, 1)}) == Coord(0, 2),
+              "chooseTarget skips a claimed cell");
+        check(chooseTarget(food, fromAnt, costHome, 4, {Coord(0, 1), Coord(0, 2), Coord(1, 0)}) == Coord(-1, -1),
+              "chooseTarget returns none when every food cell is claimed");
+    }
 }
 
 int main() {
@@ -80,6 +98,7 @@ int main() {
     testElevationCosts();
     testRectangle();
     testMarkersDoNotChangeCost();
+    testChooseTarget();
 
     if (failures == 0) {
         std::cout << "All " << checks << " checks passed.\n";
