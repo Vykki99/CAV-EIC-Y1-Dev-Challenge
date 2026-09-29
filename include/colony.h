@@ -1,6 +1,9 @@
 #ifndef DEV_CHALLENGE_COLONY_H
 #define DEV_CHALLENGE_COLONY_H
 
+#include <numeric>
+#include <random>
+
 #include "utility_functions.h"
 
 /** @brief Energy cost from start to every cell. Unreached cells stay at INT_MAX. */
