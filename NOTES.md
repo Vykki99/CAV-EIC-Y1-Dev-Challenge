@@ -124,3 +124,16 @@ step guard and walk home  mean=33.2  min=24 max=42  stranded=0    backtracks=248
 An ant now takes a food cell only when its energy covers the walk there and the walk home. Stranded deaths went to 0 on that change. The mean dipped by 0.6 because the old colony sometimes delivered one more item by spending its last energy and dying. Those unfinished hauls were not a reliable extra point.
 
 The step guard and the walk-home fallback did not move the score. The food choice already refused unsafe trips, so the guard never had to block a step. Seek misses near 7100 are the idle tail: once nothing affordable is left, every ant has no target for most of the 1000 ticks. Backtracks rose slightly because some ants step back onto a cell they just left while turning toward home.
+
+### M6 — one target per ant
+
+Same 20 seeds.
+
+```
+before claims  mean=33.2  min=24 max=42  stranded=0  backtracks=248  seek_misses mean=7105.2
+with claims    mean=34.6  min=25 max=43  stranded=0  backtracks=215  seek_misses mean=7017.9
+```
+
+Each tick now keeps a list of food cells already chosen. The next ant skips those cells, so two ants do not walk toward the same item in the same tick. The list is thrown away at the end of the tick.
+
+The mean rose by 1.4. Stopping two ants from spending a trip on one item left that energy for a delivery instead. Backtracks fell for the same reason: fewer ants turn around after arriving at a cell someone else just emptied.
