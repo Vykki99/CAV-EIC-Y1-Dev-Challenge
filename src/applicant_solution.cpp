@@ -128,13 +128,28 @@ void AntWorld::forage() {
 
     observe(this->ants, this->foodMap);
 
-    std::vector<Coord> claimed;
     for (Ant &ant : this->ants) {
         if (ant.carryingFood) {
             stepToward(ant, ant.homeCoord, this->terrainMap, this->foodMap);
-            continue;
         }
+    }
 
+    std::vector<std::size_t> seekers;
+    for (std::size_t i = 0; i < this->ants.size(); ++i) {
+        if (!this->ants[i].carryingFood) {
+            seekers.push_back(i);
+        }
+    }
+    std::sort(seekers.begin(), seekers.end(), [&](const std::size_t a, const std::size_t b) {
+        if (this->ants[a].energy != this->ants[b].energy) {
+            return this->ants[a].energy < this->ants[b].energy;
+        }
+        return a < b;
+    });
+
+    std::vector<Coord> claimed;
+    for (const std::size_t index : seekers) {
+        Ant &ant = this->ants[index];
         const Coord food = chooseAffordableFood(ant, claimed);
         if (food.first < 0) {
             if (memory.knownFoodCount == 0) {

@@ -152,3 +152,15 @@ energy start mean=543.31 leftover mean=77.21
 An idle tick is now split in two. `no_known` means the colony has no food in memory. `unaffordable` means it knows where food is and still cannot pay for the round trip. `no_known` is 0 across all 100 seeds. Every idle ant already knows where food is.
 
 The colony starts with about 543 energy and is still holding about 77 when the game ends. That leftover is too small, on each ant, for the cheapest trip that is still open.
+
+### Weakest ant takes the short trip
+
+Same 100 seeds, compared one map at a time with the colony above.
+
+```
+score +23 across 100 seeds, mean +0.23
+38 seeds up, 22 down, 40 unchanged
+leftover energy about -3 per game
+```
+
+Ants that are already carrying still walk home first. The others are sorted by energy, lowest first, and that ant claims the cheapest trip it can finish. A nearly empty ant gets the short haul while it can still complete it, instead of a fuller ant spending that trip and leaving the empty one with nothing it can afford.
