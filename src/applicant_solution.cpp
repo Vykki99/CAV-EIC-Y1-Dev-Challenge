@@ -17,6 +17,7 @@ namespace {
         int knownFoodCount = 0;
         int noKnownFoodTicks = 0;
         int unaffordableTicks = 0;
+        bool dormant = false;
     };
 
     ColonyMemory memory;
@@ -37,6 +38,7 @@ namespace {
         memory.knownFoodCount = 0;
         memory.noKnownFoodTicks = 0;
         memory.unaffordableTicks = 0;
+        memory.dormant = false;
     }
 
     /** @brief Updates knownFood from every live ant's foodScan. Empty cells in radius
@@ -114,6 +116,16 @@ void AntWorld::forage() {
         resetMemory(this->terrainMap, this->pheromoneMap, this->homeCoordinates);
     }
 
+    if (memory.dormant) {
+        const int idle = static_cast<int>(this->ants.size());
+        if (memory.knownFoodCount == 0) {
+            memory.noKnownFoodTicks += idle;
+        } else {
+            memory.unaffordableTicks += idle;
+        }
+        return;
+    }
+
     observe(this->ants, this->foodMap);
 
     std::vector<Coord> claimed;
@@ -145,6 +157,15 @@ void AntWorld::forage() {
             memory.knownFood[ant.position.first][ant.position.second] = false;
         }
     }
+
+    bool stillWorking = false;
+    for (const Ant &ant : this->ants) {
+        if (ant.carryingFood || ant.position != ant.homeCoord) {
+            stillWorking = true;
+            break;
+        }
+    }
+    memory.dormant = !stillWorking;
 }
 
 /** @brief Ant-ticks where a non-carrying ant knew of no food. */
