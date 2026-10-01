@@ -14,7 +14,9 @@ namespace {
         Coord home = Coord(-1, -1);
         std::vector<std::vector<bool> > knownFood;
         MapTemplate costToHome;
-        int seekMisses = 0;
+        int knownFoodCount = 0;
+        int noKnownFoodTicks = 0;
+        int unaffordableTicks = 0;
     };
 
     ColonyMemory memory;
@@ -32,7 +34,9 @@ namespace {
         memory.home = home;
         memory.knownFood.assign(terrain.size(), std::vector<bool>(terrain[0].size(), false));
         memory.costToHome = computeTravelCost(terrain, markers, home);
-        memory.seekMisses = 0;
+        memory.knownFoodCount = 0;
+        memory.noKnownFoodTicks = 0;
+        memory.unaffordableTicks = 0;
     }
 
     /** @brief Updates knownFood from every live ant's foodScan. Empty cells in radius
@@ -58,6 +62,16 @@ namespace {
                 memory.knownFood[cell.first][cell.second] = true;
             }
         }
+
+        int known = 0;
+        for (const auto &row : memory.knownFood) {
+            for (const bool cell : row) {
+                if (cell) {
+                    ++known;
+                }
+            }
+        }
+        memory.knownFoodCount = known;
     }
 
     /** @brief Cheapest known food this ant can reach and still walk home. */
@@ -111,7 +125,11 @@ void AntWorld::forage() {
 
         const Coord food = chooseAffordableFood(ant, claimed);
         if (food.first < 0) {
-            ++memory.seekMisses;
+            if (memory.knownFoodCount == 0) {
+                ++memory.noKnownFoodTicks;
+            } else {
+                ++memory.unaffordableTicks;
+            }
             if (ant.position != ant.homeCoord) {
                 stepToward(ant, ant.homeCoord, this->terrainMap, this->foodMap);
                 if (ant.carryingFood) {
@@ -129,9 +147,14 @@ void AntWorld::forage() {
     }
 }
 
-/** @brief Ant-ticks where a non-carrying ant had no affordable known food. */
-int colonySeekMisses() {
-    return memory.seekMisses;
+/** @brief Ant-ticks where a non-carrying ant knew of no food. */
+int colonyNoKnownFoodTicks() {
+    return memory.noKnownFoodTicks;
+}
+
+/** @brief Ant-ticks where known food existed but none of it was affordable. */
+int colonyUnaffordableTicks() {
+    return memory.unaffordableTicks;
 }
 
 /** You may insert any custom functions below **/

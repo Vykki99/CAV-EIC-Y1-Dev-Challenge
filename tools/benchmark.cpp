@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-int colonySeekMisses();
+int colonyNoKnownFoodTicks();
+int colonyUnaffordableTicks();
 
 namespace {
     constexpr int kMaxSteps = 1000;
@@ -14,7 +15,8 @@ namespace {
         int score = 0;
         int strandedDeaths = 0;
         int backtracks = 0;
-        int seekMisses = 0;
+        int noKnownFoodTicks = 0;
+        int unaffordableTicks = 0;
     };
 
     /** @brief One game, with diagnostics. Splits worldStep so deaths can be seen
@@ -70,7 +72,8 @@ namespace {
         }
 
         stats.score = world.score;
-        stats.seekMisses = colonySeekMisses();
+        stats.noKnownFoodTicks = colonyNoKnownFoodTicks();
+        stats.unaffordableTicks = colonyUnaffordableTicks();
         return stats;
     }
 }
@@ -96,7 +99,8 @@ int main(int argc, char **argv) {
     long long scoreSum = 0;
     long long strandedSum = 0;
     long long backtrackSum = 0;
-    long long seekSum = 0;
+    long long noKnownSum = 0;
+    long long unaffordableSum = 0;
     int scoreMin = 0;
     int scoreMax = 0;
 
@@ -105,7 +109,8 @@ int main(int argc, char **argv) {
         scoreSum += run.score;
         strandedSum += run.strandedDeaths;
         backtrackSum += run.backtracks;
-        seekSum += run.seekMisses;
+        noKnownSum += run.noKnownFoodTicks;
+        unaffordableSum += run.unaffordableTicks;
         if (i == 0 || run.score < scoreMin) {
             scoreMin = run.score;
         }
@@ -115,11 +120,13 @@ int main(int argc, char **argv) {
     }
 
     const double mean = seeds > 0 ? static_cast<double>(scoreSum) / seeds : 0.0;
-    const double seekMean = seeds > 0 ? static_cast<double>(seekSum) / seeds : 0.0;
+    const double noKnownMean = seeds > 0 ? static_cast<double>(noKnownSum) / seeds : 0.0;
+    const double unaffordableMean = seeds > 0 ? static_cast<double>(unaffordableSum) / seeds : 0.0;
     std::cout << "seeds=" << seeds << " map=" << mapX << "x" << mapY << " ants=" << ants << '\n';
     std::cout << "score mean=" << mean << " min=" << scoreMin << " max=" << scoreMax << '\n';
     std::cout << "stranded=" << strandedSum
               << " backtracks=" << backtrackSum
-              << " seek_misses mean=" << seekMean << '\n';
+              << " no_known mean=" << noKnownMean
+              << " unaffordable mean=" << unaffordableMean << '\n';
     return 0;
 }
