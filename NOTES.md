@@ -137,3 +137,18 @@ with claims    mean=34.6  min=25 max=43  stranded=0  backtracks=215  seek_misses
 Each tick now keeps a list of food cells already chosen. The next ant skips those cells, so two ants do not walk toward the same item in the same tick. The list is thrown away at the end of the tick.
 
 The mean rose by 1.4. Stopping two ants from spending a trip on one item left that energy for a delivery instead. Backtracks fell for the same reason: fewer ants turn around after arriving at a cell someone else just emptied.
+
+### M7 — idle ants already know the food
+
+100 seeds, 15x15, 8 ants. The 34.6 mean from M6 was the first 20 seeds only.
+
+```
+score mean=33.6 min=24 max=43
+stranded=0 backtracks=1058
+no_known mean=0 unaffordable mean=7207.86
+energy start mean=543.31 leftover mean=77.21
+```
+
+An idle tick is now split in two. `no_known` means the colony has no food in memory. `unaffordable` means it knows where food is and still cannot pay for the round trip. `no_known` is 0 across all 100 seeds. Every idle ant already knows where food is.
+
+The colony starts with about 543 energy and is still holding about 77 when the game ends. That leftover is too small, on each ant, for the cheapest trip that is still open.
