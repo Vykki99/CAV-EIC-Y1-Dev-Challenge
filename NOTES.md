@@ -164,3 +164,9 @@ leftover energy about -3 per game
 ```
 
 Ants that are already carrying still walk home first. The others are sorted by energy, lowest first, and that ant claims the cheapest trip it can finish. A nearly empty ant gets the short haul while it can still complete it, instead of a fuller ant spending that trip and leaving the empty one with nothing it can afford.
+
+### Holding cheap food back
+
+The colony still finishes holding about 77 energy. I tried making an ant with plenty of energy skip the cheapest trips, so a short haul would still be there once some ant was nearly empty.
+
+On the same 100 seeds, every cutoff lost points. The gentlest one, skipping a trip cheaper than 6 when an ant still had more than 60 energy, was 27 points down across the 100 seeds. Steeper cutoffs were worse. In the steepest cases every seed scored lower. A short trip that an ant can finish is worth taking. Saving it for later mostly meant nobody took it.
