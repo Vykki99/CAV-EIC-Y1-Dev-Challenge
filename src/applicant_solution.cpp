@@ -150,7 +150,7 @@ namespace {
             }
         }
         memory.relayReach = reach;
-        if (reach < 2 || carrier < 0) {
+        if (carrier < 0) {
             return;
         }
 
