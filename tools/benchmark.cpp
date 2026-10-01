@@ -87,21 +87,31 @@ namespace {
 }
 
 int main(int argc, char **argv) {
-    int seeds = 20;
+    int seeds = 100;
     int mapX = 15;
     int mapY = 15;
     int ants = 8;
-    if (argc > 1) {
-        seeds = std::stoi(argv[1]);
+    bool csv = false;
+    std::vector<std::string> positional;
+    for (int i = 1; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "--csv") {
+            csv = true;
+        } else {
+            positional.push_back(arg);
+        }
     }
-    if (argc > 2) {
-        mapX = std::stoi(argv[2]);
+    if (positional.size() > 0) {
+        seeds = std::stoi(positional[0]);
     }
-    if (argc > 3) {
-        mapY = std::stoi(argv[3]);
+    if (positional.size() > 1) {
+        mapX = std::stoi(positional[1]);
     }
-    if (argc > 4) {
-        ants = std::stoi(argv[4]);
+    if (positional.size() > 2) {
+        mapY = std::stoi(positional[2]);
+    }
+    if (positional.size() > 3) {
+        ants = std::stoi(positional[3]);
     }
 
     long long scoreSum = 0;
@@ -114,8 +124,13 @@ int main(int argc, char **argv) {
     int scoreMin = 0;
     int scoreMax = 0;
 
+    if (csv) {
+        std::cout << "seed,score,stranded,backtracks,no_known,unaffordable,start_energy,leftover\n";
+    }
+
     for (int i = 0; i < seeds; ++i) {
-        const RunStats run = runSeed(1000u + static_cast<uint32_t>(i), mapX, mapY, ants);
+        const uint32_t seed = 1000u + static_cast<uint32_t>(i);
+        const RunStats run = runSeed(seed, mapX, mapY, ants);
         scoreSum += run.score;
         strandedSum += run.strandedDeaths;
         backtrackSum += run.backtracks;
@@ -128,6 +143,12 @@ int main(int argc, char **argv) {
         }
         if (i == 0 || run.score > scoreMax) {
             scoreMax = run.score;
+        }
+        if (csv) {
+            std::cout << seed << ',' << run.score << ',' << run.strandedDeaths << ','
+                      << run.backtracks << ',' << run.noKnownFoodTicks << ','
+                      << run.unaffordableTicks << ',' << run.startEnergy << ','
+                      << run.leftoverEnergy << '\n';
         }
     }
 
