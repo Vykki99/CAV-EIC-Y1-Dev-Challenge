@@ -61,9 +61,9 @@ namespace {
     }
 
     /** @brief Cheapest known food this ant can reach and still walk home. */
-    Coord chooseAffordableFood(const Ant &ant) {
+    Coord chooseAffordableFood(const Ant &ant, const std::vector<Coord> &claimed) {
         const MapTemplate fromAnt = computeCostField(memory.terrain, ant.position);
-        return chooseTarget(memory.knownFood, fromAnt, memory.costToHome, ant.energy, {});
+        return chooseTarget(memory.knownFood, fromAnt, memory.costToHome, ant.energy, claimed);
     }
 
     /** @brief Walks one cell toward dest, but only if the ant can still reach home
@@ -102,13 +102,14 @@ void AntWorld::forage() {
 
     observe(this->ants, this->foodMap);
 
+    std::vector<Coord> claimed;
     for (Ant &ant : this->ants) {
         if (ant.carryingFood) {
             stepToward(ant, ant.homeCoord, this->terrainMap, this->foodMap);
             continue;
         }
 
-        const Coord food = chooseAffordableFood(ant);
+        const Coord food = chooseAffordableFood(ant, claimed);
         if (food.first < 0) {
             ++memory.seekMisses;
             if (ant.position != ant.homeCoord) {
@@ -119,6 +120,7 @@ void AntWorld::forage() {
             }
             continue;
         }
+        claimed.push_back(food);
         stepToward(ant, food, this->terrainMap, this->foodMap);
         // This tick's observe() already ran, so forget the pickup for ants still to move.
         if (ant.carryingFood) {
