@@ -170,3 +170,29 @@ Ants that are already carrying still walk home first. The others are sorted by e
 The colony still finishes holding about 77 energy. I tried making an ant with plenty of energy skip the cheapest trips, so a short haul would still be there once some ant was nearly empty.
 
 On the same 100 seeds, every cutoff lost points. The gentlest one, skipping a trip cheaper than 6 when an ant still had more than 60 energy, was 27 points down across the 100 seeds. Steeper cutoffs were worse. In the steepest cases every seed scored lower. A short trip that an ant can finish is worth taking. Saving it for later mostly meant nobody took it.
+
+### Dropping food on the way home
+
+The colony still finishes holding about 74 energy, split across ants that can no longer pay for a full round trip. In `updateWorld`, an ant that dies while carrying food puts that food back on the map at the cell where it stopped:
+
+```cpp
+if (it->energy == 0) {
+    if (it->carryingFood) {
+        this->foodMap[it->position.first][it->position.second] = 1;
+    }
+}
+```
+
+An ant that cannot get home could still walk out, pick the food up, and die on the way back. The food would show up closer to home, and a second ant might then afford the shorter trip. The score counts food returned, and this drop is already what the framework does when an ant runs out. Choosing to spend an ant that way on purpose is a judgment call, so I only counted how often the energy would line up.
+
+The count runs once, on the tick where every ant is home and idle. It looks at the nearest known food. `relay_reach` is how many ants could walk there one way. `relay_pairs` is 1 when the ant with the most energy could carry that food partway, and some other ant could afford the trip from home to the cell where it would be dropped. That second ant does not have to be able to reach the original food.
+
+Same 100 seeds. Nothing about the walk changed, and the score stayed put.
+
+```
+score mean=33.83 min=24 max=43
+relay_reach mean=3.26
+relay_pairs mean=0.80
+```
+
+In 80 of the 100 games the energy was there for one drop and one finish. About 3 ants per game could have made the walk out. A step costs 1 or 2, and the food is only put back when energy hits exactly 0, so an ant can stop one cell early with 1 energy left. The 80 counts games where the energy is enough, not games where the drop would actually land on the hoped-for cell.
