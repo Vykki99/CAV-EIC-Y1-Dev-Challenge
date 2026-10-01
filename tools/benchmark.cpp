@@ -7,6 +7,8 @@
 
 int colonyNoKnownFoodTicks();
 int colonyUnaffordableTicks();
+int colonyRelayReach();
+int colonyRelayPairs();
 
 namespace {
     constexpr int kMaxSteps = 1000;
@@ -19,6 +21,8 @@ namespace {
         int unaffordableTicks = 0;
         int startEnergy = 0;
         int leftoverEnergy = 0;
+        int relayReach = 0;
+        int relayPairs = 0;
     };
 
     /** @brief One game, with diagnostics. Splits worldStep so deaths can be seen
@@ -79,6 +83,8 @@ namespace {
         stats.score = world.score;
         stats.noKnownFoodTicks = colonyNoKnownFoodTicks();
         stats.unaffordableTicks = colonyUnaffordableTicks();
+        stats.relayReach = colonyRelayReach();
+        stats.relayPairs = colonyRelayPairs();
         for (const Ant &ant : world.ants) {
             stats.leftoverEnergy += ant.energy;
         }
@@ -121,11 +127,13 @@ int main(int argc, char **argv) {
     long long unaffordableSum = 0;
     long long startEnergySum = 0;
     long long leftoverSum = 0;
+    long long relayReachSum = 0;
+    long long relayPairsSum = 0;
     int scoreMin = 0;
     int scoreMax = 0;
 
     if (csv) {
-        std::cout << "seed,score,stranded,backtracks,no_known,unaffordable,start_energy,leftover\n";
+        std::cout << "seed,score,stranded,backtracks,no_known,unaffordable,start_energy,leftover,relay_reach,relay_pairs\n";
     }
 
     for (int i = 0; i < seeds; ++i) {
@@ -138,6 +146,8 @@ int main(int argc, char **argv) {
         unaffordableSum += run.unaffordableTicks;
         startEnergySum += run.startEnergy;
         leftoverSum += run.leftoverEnergy;
+        relayReachSum += run.relayReach;
+        relayPairsSum += run.relayPairs;
         if (i == 0 || run.score < scoreMin) {
             scoreMin = run.score;
         }
@@ -148,7 +158,8 @@ int main(int argc, char **argv) {
             std::cout << seed << ',' << run.score << ',' << run.strandedDeaths << ','
                       << run.backtracks << ',' << run.noKnownFoodTicks << ','
                       << run.unaffordableTicks << ',' << run.startEnergy << ','
-                      << run.leftoverEnergy << '\n';
+                      << run.leftoverEnergy << ',' << run.relayReach << ','
+                      << run.relayPairs << '\n';
         }
     }
 
@@ -157,6 +168,8 @@ int main(int argc, char **argv) {
     const double unaffordableMean = seeds > 0 ? static_cast<double>(unaffordableSum) / seeds : 0.0;
     const double startMean = seeds > 0 ? static_cast<double>(startEnergySum) / seeds : 0.0;
     const double leftoverMean = seeds > 0 ? static_cast<double>(leftoverSum) / seeds : 0.0;
+    const double relayReachMean = seeds > 0 ? static_cast<double>(relayReachSum) / seeds : 0.0;
+    const double relayPairsMean = seeds > 0 ? static_cast<double>(relayPairsSum) / seeds : 0.0;
     std::cout << "seeds=" << seeds << " map=" << mapX << "x" << mapY << " ants=" << ants << '\n';
     std::cout << "score mean=" << mean << " min=" << scoreMin << " max=" << scoreMax << '\n';
     std::cout << "stranded=" << strandedSum
@@ -164,5 +177,7 @@ int main(int argc, char **argv) {
               << " no_known mean=" << noKnownMean
               << " unaffordable mean=" << unaffordableMean << '\n';
     std::cout << "energy start mean=" << startMean << " leftover mean=" << leftoverMean << '\n';
+    std::cout << "relay_reach mean=" << relayReachMean
+              << " relay_pairs mean=" << relayPairsMean << '\n';
     return 0;
 }
