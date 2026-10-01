@@ -17,6 +17,8 @@ namespace {
         int knownFoodCount = 0;
         int noKnownFoodTicks = 0;
         int unaffordableTicks = 0;
+        int relayReach = 0;
+        int relayPairs = 0;
         bool dormant = false;
     };
 
@@ -38,6 +40,8 @@ namespace {
         memory.knownFoodCount = 0;
         memory.noKnownFoodTicks = 0;
         memory.unaffordableTicks = 0;
+        memory.relayReach = 0;
+        memory.relayPairs = 0;
         memory.dormant = false;
     }
 
@@ -107,6 +111,63 @@ namespace {
             return;
         }
         ant.move(terrain, next, food);
+    }
+
+    /** @brief Once every ant is home and idle, check whether one could carry the nearest
+     * food partway and leave it where a second ant could finish the trip.
+     */
+    void measureRelay(const std::vector<Ant> &ants) {
+        const int unreached = std::numeric_limits<int>::max();
+        int nearest = unreached;
+        const int rows = static_cast<int>(memory.knownFood.size());
+        const int cols = rows > 0 ? static_cast<int>(memory.knownFood[0].size()) : 0;
+
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                if (!memory.knownFood[i][j]) {
+                    continue;
+                }
+                const int homeCost = memory.costToHome[i][j];
+                if (homeCost < nearest) {
+                    nearest = homeCost;
+                }
+            }
+        }
+        if (nearest == unreached) {
+            return;
+        }
+
+        int bestEnergy = -1;
+        int carrier = -1;
+        int reach = 0;
+        for (int i = 0; i < static_cast<int>(ants.size()); ++i) {
+            if (ants[i].energy > nearest) {
+                ++reach;
+                if (ants[i].energy > bestEnergy) {
+                    bestEnergy = ants[i].energy;
+                    carrier = i;
+                }
+            }
+        }
+        memory.relayReach = reach;
+        if (reach < 2 || carrier < 0) {
+            return;
+        }
+
+        const int drop = 2 * nearest - bestEnergy;
+        if (drop <= 0) {
+            return;
+        }
+        const int roundTrip = 2 * drop;
+        for (int i = 0; i < static_cast<int>(ants.size()); ++i) {
+            if (i == carrier) {
+                continue;
+            }
+            if (ants[i].energy >= roundTrip) {
+                memory.relayPairs = 1;
+                return;
+            }
+        }
     }
 }
 
@@ -180,6 +241,9 @@ void AntWorld::forage() {
             break;
         }
     }
+    if (!stillWorking) {
+        measureRelay(this->ants);
+    }
     memory.dormant = !stillWorking;
 }
 
@@ -191,6 +255,16 @@ int colonyNoKnownFoodTicks() {
 /** @brief Ant-ticks where known food existed but none of it was affordable. */
 int colonyUnaffordableTicks() {
     return memory.unaffordableTicks;
+}
+
+/** @brief Ants that could reach the nearest known food one way, once the colony stopped. */
+int colonyRelayReach() {
+    return memory.relayReach;
+}
+
+/** @brief 1 when a second ant could afford the trip to where that food would be dropped. */
+int colonyRelayPairs() {
+    return memory.relayPairs;
 }
 
 /** You may insert any custom functions below **/
