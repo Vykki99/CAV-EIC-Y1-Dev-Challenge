@@ -69,8 +69,8 @@ and scores nothing.
 `dev_challenge` is a poor measuring stick for anything after that. The constructor prints
 each ant's starting energy, and if the 1000-step cap is hit it never prints the score at
 all. `tools/benchmark.cpp` runs many seeds, swallows those energy prints, and always
-reports `game.score`. Command is `benchmark [seeds] [mapX] [mapY] [ants]`, defaults
-20 / 15 / 15 / 8. Seeds are 1000, 1001, ... so the number is not overfit to 12345.
+reports `game.score`. Command is `benchmark [--csv] [seeds] [mapX] [mapY] [ants]`, defaults
+100 / 15 / 15 / 8. Seeds are 1000, 1001, ... so the number is not overfit to 12345.
 
 ### M1 — nearest known food, whole-path `move()`
 
@@ -220,3 +220,9 @@ The 15x15 row with 8 ants is the same run as before. Stranded deaths stayed 0 on
 Swapping a 10x20 map for a 20x10 map barely moved the mean, and both start from the same energy budget because the cell count is the same. The cost field is not assuming a square.
 
 None of these emptied the map. The best single game was 65, with 16 ants on a 15x15, and that map holds 90 food. The game ends as soon as the last food is picked up, even if that ant has not reached home yet. That only costs a point in a game that actually collects every item, and none of these did.
+
+### The colony as it stands
+
+Each tick, every ant scans into one shared map. An ant that is already carrying walks home, one cell at a time, and only takes the step if it can still get home from the cell it would land on. Standing on food still calls `move()`, so the pickup happens. The other ants go in order of energy, lowest first. Each takes the cheapest known food it can reach and still walk home, and skips a cell another ant already chose this tick.
+
+On the 100 seeds, 15x15 with 8 ants, that scores a mean of 33.83, with no stranded deaths. The same rules are what the other map sizes above were running.
