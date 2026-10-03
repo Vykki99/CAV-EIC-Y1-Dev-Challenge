@@ -184,6 +184,10 @@ void AntWorld::forage() {
         } else {
             memory.unaffordableTicks += idle;
         }
+        // The score is already final. Clearing energy is what lets the game end.
+        for (Ant &ant : this->ants) {
+            ant.energy = 0;
+        }
         return;
     }
 

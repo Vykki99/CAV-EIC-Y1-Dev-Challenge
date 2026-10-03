@@ -226,3 +226,11 @@ None of these emptied the map. The best single game was 65, with 16 ants on a 15
 Each tick, every ant scans into one shared map. An ant that is already carrying walks home, one cell at a time, and only takes the step if it can still get home from the cell it would land on. Standing on food still calls `move()`, so the pickup happens. The other ants go in order of energy, lowest first. Each takes the cheapest known food it can reach and still walk home, and skips a cell another ant already chose this tick.
 
 On the 100 seeds, 15x15 with 8 ants, that scores a mean of 33.83, with no stranded deaths. The same rules are what the other map sizes above were running.
+
+### Ending the game
+
+That score was already final once every ant was home and nothing left was affordable. The official program only prints it when the game ends, and the game ends when every ant is gone or the map is empty. The ants were still holding leftover energy, so the run hit 1000 steps and printed nothing.
+
+Those ants are already home, and none of them is carrying food. Their leftover energy is cleared in place. The framework removes an ant once its energy is 0, and a point is awarded only when an ant is home and still carrying, so this adds nothing to the score. The game ends, and the number printed is the one already earned.
+
+Seed 12345 prints 37. The same 100 seeds still score a mean of 33.83.
