@@ -60,6 +60,9 @@ challenge description:
 
 Building it in small steps so I can measure each one instead of guessing.
 
+I sketched the whole loop in python first (`prototype.py`, kept in the repo as it was) because
+it is faster to argue with, and the c++ follows that structure function for function.
+
 ## Baseline
 
 Unmodified project builds clean with GCC 16.1 and CMake 4.3. All 40 framework checks in
